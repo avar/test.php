@@ -1,0 +1,15 @@
+--- 
+abstract: TAP test framework for PHP with a L<Test::More>-like interface
+author: "\xC3\x86var Arnfj\xC3\xB6r\xC3\xB0 Bjarmason <avar@cpan.org>"
+distribution_type: script
+generated_by: Module::Install version 0.65
+license: unrestricted
+meta-spec: 
+  url: http://module-build.sourceforge.net/META-spec-v1.3.html
+  version: 1.3
+name: Test.php
+no_index: 
+  directory: 
+    - inc
+    - t
+version: 0.12

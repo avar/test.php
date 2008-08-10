@@ -1,3 +1,12 @@
+2008-08-10  Ævar Arnfjörð Bjarmason  <avar@cpan.org> (0.13)
+
+	* Test.php: Style patch from Ricardo SIGNES <rjbs@cpan.org>:
+	Replace got/expected with the standard have/want terminology. Also
+	supresses diagnostic output when both have and want are null. That
+	means that ok(0, "whatever") will no longer tell you what you have
+	and want, since it didn't know anyway.
+	* Makefile.PL: Ran dos2unix on the Makefile.PL to use unix newlines
+
 2007-06-09 Ævar Arnfjörð Bjarmason <avar@cpan.org> (0.12)
 
 	* README: Arg, forgot to update this from the POD in 0.10 and 0.11, again!

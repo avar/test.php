@@ -52,27 +52,27 @@ function ok($cond, $desc = '') {
     return _proclaim($cond, $desc);
 }
 
-function is($got, $expected, $desc = '') {
-    $pass = $got == $expected;
-    return _proclaim($pass, $desc, /* todo */ false, $got, $expected);
+function is($have, $want, $desc = '') {
+    $pass = $have == $want;
+    return _proclaim($pass, $desc, /* todo */ false, $have, $want);
 }
 
-function isnt($got, $expected, $desc = '') {
-    $pass = $got != $expected;
-    return _proclaim($pass, $desc, /* todo */ false, $got, $expected, /* negated */ true);
+function isnt($have, $want, $desc = '') {
+    $pass = $have != $want;
+    return _proclaim($pass, $desc, /* todo */ false, $have, $want, /* negated */ true);
 }
 
-function like($got, $expected, $desc = '') {
-    $pass = preg_match($expected, $got);
-    return _proclaim($pass, $desc, /* todo */ false, $got, $expected);
+function like($have, $want, $desc = '') {
+    $pass = preg_match($want, $have);
+    return _proclaim($pass, $desc, /* todo */ false, $have, $want);
 }
 
-function unlike($got, $expected, $desc = '') {
-    $pass = !preg_match($expected, $got);
-    return _proclaim($pass, $desc, /* todo */ false, $got, $expected, /* negated */ true);
+function unlike($have, $want, $desc = '') {
+    $pass = !preg_match($want, $have);
+    return _proclaim($pass, $desc, /* todo */ false, $have, $want, /* negated */ true);
 }
 
-function cmp_ok($got, $op, $expected, $desc = '')
+function cmp_ok($have, $op, $want, $desc = '')
 {
     $pass = null;
 
@@ -80,39 +80,39 @@ function cmp_ok($got, $op, $expected, $desc = '')
     switch ($op)
     {
       case '==':
-        $pass = $got == $expected;
+        $pass = $have == $want;
         break;
       case '===':
-        $pass = $got === $expected;
+        $pass = $have === $want;
         break;
       case '!=':
       case '<>':
-        $pass = $got != $expected;
+        $pass = $have != $want;
         break;
       case '!==':
-        $pass = $got !== $expected;
+        $pass = $have !== $want;
         break;
       case '<':
-        $pass = $got < $expected;
+        $pass = $have < $want;
         break;
       case '>':
-        $pass = $got > $expected;
+        $pass = $have > $want;
         break;
       case '<=':
-        $pass = $got <= $expected;
+        $pass = $have <= $want;
         break;
       case '>=':
-        $pass = $got >= $expected;
+        $pass = $have >= $want;
         break;
     default:
         if (function_exists($op)) {
-            $pass = $op($got, $expected);
+            $pass = $op($have, $want);
         } else {
             die("No such operator or function $op\n");
         }
     }
 
-    return _proclaim($pass, $desc, /* todo */ false, $got, "$got $op $expected");
+    return _proclaim($pass, $desc, /* todo */ false, $have, "$have $op $want");
 }
 
 function diag($message)
@@ -140,25 +140,25 @@ function require_ok($file, $desc = '')
     return _proclaim($pass, $desc == '' ? "require $file" : $desc);
 } 
 
-function is_deeply($got, $expected, $desc = '')
+function is_deeply($have, $want, $desc = '')
 {
-    $diff = _cmp_deeply($got, $expected);
+    $diff = _cmp_deeply($have, $want);
     $pass = is_null($diff);
 
     if (!$pass) {
-        $got      = strlen($diff['gpath']) ? ($diff['gpath'] . ' = ' . $diff['got']) 
-                                           : _repl($got);
-        $expected = strlen($diff['epath']) ? ($diff['epath'] . ' = ' . $diff['expected']) 
-                                           : _repl($expected);
+        $have = strlen($diff['gpath']) ? ($diff['gpath'] . ' = ' . $diff['have']) 
+                                       : _repl($have);
+        $want = strlen($diff['epath']) ? ($diff['epath'] . ' = ' . $diff['want']) 
+                                       : _repl($want);
     }
 
-    _proclaim($pass, $desc, /* todo */ false, $got, $expected);
+    _proclaim($pass, $desc, /* todo */ false, $have, $want);
 }
 
-function isa_ok($obj, $expected, $desc = '')
+function isa_ok($obj, $want, $desc = '')
 {
-    $pass = is_a($obj, $expected);
-    _proclaim($pass, $desc, /* todo */ false, $name, $expected);
+    $pass = is_a($obj, $want);
+    _proclaim($pass, $desc, /* todo */ false, $name, $want);
 }
 
 function todo_start($why = '')
@@ -187,8 +187,8 @@ function _proclaim(
     $cond, # bool
     $desc = '',
     $todo = false,
-    $got = null,
-    $expected = null,
+    $have = null,
+    $want = null,
     $negate = false) {
 
     global $__Test;
@@ -222,16 +222,27 @@ function _proclaim(
         $caller = debug_backtrace();
         $call = $caller['1'];
     
-        diag(
-            sprintf(" Failed%stest '%s'\n in %s at line %d\n       got: %s\n  expected: %s",
-                $todo ? ' TODO ' : ' ',
-                $desc,
-                $call['file'],
-                $call['line'],
-                $got,
-                $expected
-            )
-        );
+        if (($have != null) || ($want != null)) {
+          diag(
+              sprintf(" Failed%stest '%s'\n in %s at line %d\n have: %s\n  want: %s",
+                  $todo ? ' TODO ' : ' ',
+                  $desc,
+                  $call['file'],
+                  $call['line'],
+                  $have,
+                  $want
+              )
+          );
+        } else {
+          diag(
+              sprintf(" Failed%stest '%s'\n in %s at line %d",
+                  $todo ? ' TODO ' : ' ',
+                  $desc,
+                  $call['file'],
+                  $call['line']
+              )
+          );
+        }
     }
 
     return $cond;
@@ -271,12 +282,12 @@ function _repl($obj, $deep = true) {
     }
 }
 
-function _diff($gpath, $got, $epath, $expected) {
+function _diff($gpath, $have, $epath, $want) {
     return array(
-        'gpath'     => $gpath,
-        'got'       => $got,
-        'epath'     => $epath,
-        'expected'  => $expected
+        'gpath' => $gpath,
+        'have'  => $have,
+        'epath' => $epath,
+        'want'  => $want
     );
 }
 
@@ -284,21 +295,21 @@ function _idx($obj, $path = '') {
     return $path . '[' . _repl($obj) . ']';
 }
 
-function _cmp_deeply($got, $exp, $path = '') {
+function _cmp_deeply($have, $exp, $path = '') {
     if (is_array($exp)) {
         
-        if (!is_array($got)) {
-            return _diff($path, _repl($got), $path, _repl($exp));
+        if (!is_array($have)) {
+            return _diff($path, _repl($have), $path, _repl($exp));
         }
         
-        $gk = array_keys($got);
+        $gk = array_keys($have);
         $ek = array_keys($exp);
         $mc = max(count($gk), count($ek));
 
         for ($el = 0; $el < $mc; $el++) {
             # One array shorter than the other?
             if ($el >= count($ek)) {
-                return _diff(_idx($gk[$el], $path), _repl($got[$gk[$el]]), 
+                return _diff(_idx($gk[$el], $path), _repl($have[$gk[$el]]), 
                              'missing', 'nothing');
             } else if ($el >= count($gk)) {
                 return _diff('missing', 'nothing', 
@@ -307,12 +318,12 @@ function _cmp_deeply($got, $exp, $path = '') {
             
             # Keys differ?
             if ($gk[$el] != $ek[$el]) {
-                return _diff(_idx($gk[$el], $path), _repl($got[$gk[$el]]), 
+                return _diff(_idx($gk[$el], $path), _repl($have[$gk[$el]]), 
                              _idx($ek[$el], $path), _repl($exp[$ek[$el]]));
             }
 
             # Recurse
-            $rc = _cmp_deeply($got[$gk[$el]], $exp[$ek[$el]], _idx($gk[$el], $path));
+            $rc = _cmp_deeply($have[$gk[$el]], $exp[$ek[$el]], _idx($gk[$el], $path));
             if (!is_null($rc)) {
                 return $rc;
             }
@@ -320,8 +331,8 @@ function _cmp_deeply($got, $exp, $path = '') {
     }
     else {
         # Default to serialize hack
-        if (serialize($got) != serialize($exp)) {
-            return _diff($path, _repl($got), $path, _repl($exp));
+        if (serialize($have) != serialize($exp)) {
+            return _diff($path, _repl($have), $path, _repl($exp));
         }
     }
     
@@ -388,30 +399,30 @@ Test.php - TAP test framework for PHP with a L<Test::More>-like interface
     # the test, e.g. "some_function() returns an integer"
   
     # Various ways to say "ok"
-    ok($got == $expected, $test_name);
+    ok($have == $want, $test_name);
   
     # Compare with == and !=
-    is($got, $expected, $test_name);
-    isnt($got, $expected, $test_name);
+    is($have, $want, $test_name);
+    isnt($have, $want, $test_name);
   
     # Run a preg regex match on some data
-    like($got, $regex, $test_name);
-    unlike($got, $regex, $test_name);
+    like($have, $regex, $test_name);
+    unlike($have, $regex, $test_name);
   
     # Compare something with a given comparison operator
-    cmp_ok($got, '==', $expected, $test_name);
+    cmp_ok($have, '==', $want, $test_name);
     # Compare something with a comparison function (should return bool)
-    cmp_ok($got, $func, $expected, $test_name);
+    cmp_ok($have, $func, $want, $test_name);
   
     # Recursively check datastructures for equalness
-    is_deeply($got, $expected, $test_name);
+    is_deeply($have, $want, $test_name);
   
     # Always pass or fail a test under an optional name
     pass($test_name);
     fail($test_name);
 
-    # TODO tests, these are expected to fail but won't fail the test run,
-    # unexpected success will be reported
+    # TODO tests, these are want to fail but won't fail the test run,
+    # unwant success will be reported
     todo_start("integer arithmetic still working");
     ok(1 + 2 == 3);
     {
